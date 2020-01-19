@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from bgapp.bgModels import *
@@ -59,3 +59,7 @@ def get_user_topics(request):
 
     response = JsonResponse(json_content)
     return response
+
+@csrf_exempt
+def itsme(request):
+    return HttpResponse('long duong')

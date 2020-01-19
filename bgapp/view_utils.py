@@ -10,7 +10,7 @@ def static_vars(**kwargs):
 
 
 options_per_page = 30
-times_to_reset = 10
+times_to_reset = 5
 times = 0
 cache = Topic.objects.annotate(num_convos=models.Count('conversations'))\
                                         .order_by('-num_convos')[:options_per_page]

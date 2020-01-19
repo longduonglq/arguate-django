@@ -141,7 +141,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.user_db_ref.isLooking = True
         self.user_db_ref.save()
 
-        opponent, opinion = get_opponent(opinion_list, self.user_id)
+        opponent, opinion = get_opponent(opinion_list)
 
         if opponent == 'NOT_FOUND':
             self.inform_client_of_error(
@@ -179,6 +179,7 @@ class ChatConsumer(JsonWebsocketConsumer):
                     'topic': opinion.topic.content,
                     'opinion': not opinion.position # this is the other opinion
                 })
+                log.debug('match: {} *** {}'.format(self.user_id, str(self.contact_db.userID)))
 
             except Exception as e:
                 self.user_db_ref.isLooking = False
@@ -197,25 +198,31 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.contact_db = None
         self.cur_conversation_db = None
 
+        self.user_db_ref.isLooking = False
+        self.user_db_ref.save()
+
     def end_chat(self, data):
         """
             data keys: cmd
         """
-        if self.cur_conversation_db is None:
-            return None
-        self.cur_conversation_db.timeEnd = datetime.datetime.now()
-        self.cur_conversation_db.isEnded = True
-        self.cur_conversation_db.save()
+        if self.cur_conversation_db is not None:
+            self.cur_conversation_db.timeEnd = datetime.datetime.now()
+            self.cur_conversation_db.isEnded = True
+            self.cur_conversation_db.save()
 
-        async_to_sync(self.channel_layer.send)(
-            ChatConsumer.user_id_channel_map[self.contact_db.userID],
-            {
-                'type': 'receive_end_chat',
-                'cmd': 'receive_end_chat',
-            }
-        )
+            async_to_sync(self.channel_layer.send)(
+                ChatConsumer.user_id_channel_map[self.contact_db.userID],
+                {
+                    'type': 'receive_end_chat',
+                    'cmd': 'receive_end_chat',
+                }
+            )
+
         self.contact_db = None
         self.cur_conversation_db = None
+
+        self.user_db_ref.isLooking = False
+        self.user_db_ref.save()
 
     def receive_typing_status(self, data):
         self.send_json(content=data)
@@ -338,6 +345,9 @@ class ChatConsumer(JsonWebsocketConsumer):
         # what topics is an online user currently engage in
         self.user_db_ref.topics.add(topic_db)
 
+        topic_db.con_camp.save()
+        topic_db.pro_camp.save()
+
     def change_opinion(self, data):
         """
             1. change UserOpinion object
@@ -376,6 +386,7 @@ class ChatConsumer(JsonWebsocketConsumer):
                     log_msg=str(e),
                     type='change_opinion_err',
                 )
+                return None
         else:
             try:
                 topic_db = Topic.objects.get(content__iexact=data['topic'])
@@ -391,6 +402,10 @@ class ChatConsumer(JsonWebsocketConsumer):
                     log_msg=str(e),
                     type='change_opinion_err',
                 )
+                return None
+
+        topic_db.con_camp.save()
+        topic_db.pro_camp.save()
 
     def unregister_opinion(self, data):
         """
@@ -443,6 +458,9 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         if topic_db is not None:
             self.user_db_ref.topics.remove(topic_db)
+
+        topic_db.con_camp.save()
+        topic_db.pro_camp.save()
 
     cmd_handlers = {
         'user_id': user_id,

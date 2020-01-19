@@ -47,7 +47,7 @@ def simulate_users_choosing_topics():
 
 def simulate():
     generate_users(1000)
-    generate_topics(10)
+    generate_topics(60)
     simulate_users_choosing_topics()
 
 def update_topic_camp_user_count():

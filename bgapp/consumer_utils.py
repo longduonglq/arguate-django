@@ -5,20 +5,18 @@ import random
 from random import shuffle
 random.seed(1)
 
-def get_opponent(opinion_list, userID):
-    opinion_list = opinion_list.all()
+def get_opponent(opinion_list):
+    opinion_list = opinion_list.filter(isDeleted=False)
 
     random_range = list(range(opinion_list.count()))
     shuffle(random_range)
     for index in random_range:
         if opinion_list[index].position:
             opponents = opinion_list[index].topic.con_camp.users.filter(
-                                                            ~models.Q(userID=userID),
                                                             isBanned=False,
                                                             isLooking=True)
         else:
             opponents = opinion_list[index].topic.pro_camp.users.filter(
-                                                            ~models.Q(userID=userID),
                                                             isBanned=False,
                                                             isLooking=True)
 
