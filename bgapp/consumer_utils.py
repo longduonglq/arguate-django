@@ -34,3 +34,21 @@ def msg_security_check(msg):
 def topic_security_check(topic):
     return topic, True
 
+def getMinutes(td):
+    return (td.seconds//60) % 60
+
+class IncrementalAverage:
+    book = {} # stat, [avg, N]
+
+    @staticmethod
+    def add_to_average(stat, value):
+        if stat not in IncrementalAverage.book:
+            IncrementalAverage.book[stat] = [0, 0]
+
+        avg, N = IncrementalAverage.book[stat]
+        IncrementalAverage.book[stat] = [(avg * N + value)/(N + 1), N + 1]
+        return IncrementalAverage.book[stat][0]
+
+    @staticmethod
+    def get_avg(stat):
+        return IncrementalAverage.book[stat][0]

@@ -4,11 +4,13 @@ import json
 from bgapp.bgModels import *
 from django.core import exceptions
 from .view_utils import *
+from statsd.defaults.django import statsd
 
 import logging
 log = logging.getLogger('batground')
 
 @csrf_exempt
+@statsd.timer('getTopics_Time')
 def get_topics(request):
     req = json.loads(request.body.decode('utf-8'))
     try:
@@ -41,6 +43,7 @@ def get_topics(request):
 
 
 @csrf_exempt
+@statsd.timer('getUserTopics_Time')
 def get_user_topics(request):
     req = json.loads(request.body.decode('utf-8'))
     try:
