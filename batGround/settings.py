@@ -29,6 +29,13 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = ['127.0.0.1', 'arguate.com', '159.89.136.177']
 CORS_ORIGIN_ALLOW_ALL = True
 
+# PRODUCTION SETTINGS
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'ldfrontend', 'build', 'static'),
+]
+# END PRODUCTION SETTINGS
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -60,7 +67,7 @@ ROOT_URLCONF = 'batGround.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'ldfrontend')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

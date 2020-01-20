@@ -5,6 +5,7 @@ from bgapp.bgModels import *
 from django.core import exceptions
 from .view_utils import *
 from statsd.defaults.django import statsd
+from django.shortcuts import render
 
 import logging
 log = logging.getLogger('batground')
@@ -66,3 +67,7 @@ def get_user_topics(request):
 @csrf_exempt
 def itsme(request):
     return HttpResponse('long duong')
+
+def index(request):
+    return render(request, "build/index.html")
+
