@@ -1,41 +1,43 @@
 {
-  "_from": "react-chat-ui@^0.3.2",
+  "_args": [
+    [
+      "react-chat-ui@0.3.2",
+      "/Users/dp/PycharmProjects/batGround/ldfrontend"
+    ]
+  ],
+  "_from": "react-chat-ui@0.3.2",
   "_id": "react-chat-ui@0.3.2",
   "_inBundle": false,
   "_integrity": "sha512-2LPu7h09yq+cbetI/oCkkhvSGxLKqrFFo4+84XNw2s7jczuowY2oVDRyXVX2DaTnAJ1ky3z6LCzEAOD68GAw7w==",
   "_location": "/react-chat-ui",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "react-chat-ui@^0.3.2",
+    "raw": "react-chat-ui@0.3.2",
     "name": "react-chat-ui",
     "escapedName": "react-chat-ui",
-    "rawSpec": "^0.3.2",
+    "rawSpec": "0.3.2",
     "saveSpec": null,
-    "fetchSpec": "^0.3.2"
+    "fetchSpec": "0.3.2"
   },
   "_requiredBy": [
-    "#USER",
     "/"
   ],
   "_resolved": "https://registry.npmjs.org/react-chat-ui/-/react-chat-ui-0.3.2.tgz",
-  "_shasum": "9698ca78affef93de31037594cc7325fc8b0492c",
-  "_spec": "react-chat-ui@^0.3.2",
-  "_where": "/Users/dp/PycharmProjects/batGround/frontend",
+  "_spec": "0.3.2",
+  "_where": "/Users/dp/PycharmProjects/batGround/ldfrontend",
   "author": {
     "name": "Brandon Mowat"
   },
   "bugs": {
     "url": "https://github.com/brandonmowat/react-chat-ui/issues"
   },
-  "bundleDependencies": false,
   "dependencies": {
     "prop-types": "^15.5.10",
     "react": "^16.1.0",
     "react-dom": "^16.1.0"
   },
-  "deprecated": false,
   "description": "A library of React components for building chat UI's",
   "devDependencies": {
     "babel-cli": "^6.26.0",

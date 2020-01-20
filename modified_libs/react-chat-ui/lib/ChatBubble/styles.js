@@ -1,9 +1,8 @@
 "use strict";
-
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = {
     chatbubbleWrapper: {
-        overflow: 'auto'
+        overflow: 'auto',
     },
     chatbubble: {
         backgroundColor: '#0084FF',
@@ -17,22 +16,28 @@ exports.default = {
         paddingBottom: 8,
         paddingLeft: 14,
         paddingRight: 14,
-        width: '-webkit-fit-content'
+        width: '-webkit-fit-content',
     },
     chatbubbleOrientationNormal: {
-        float: 'right'
+        float: 'right',
     },
     recipientChatbubble: {
-        backgroundColor: '#ccc'
+        backgroundColor: '#ccc',
     },
     recipientChatbubbleOrientationNormal: {
-        float: 'left'
+        float: 'left',
     },
     p: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '300',
-        margin: 0
-    }
+        margin: 0,
+    },
+    p_other: {
+        color: 'black',
+        fontSize: 16,
+        fontWeight: '300',
+        margin: 0,
+    },
 };
 //# sourceMappingURL=styles.js.map
