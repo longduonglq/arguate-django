@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('ldadmin/', admin.site.urls),
     path('lduong/', include('ld_admin.urls')),
     path('', include('bgapp.urls'))
 ]
