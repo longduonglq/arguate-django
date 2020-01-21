@@ -67,7 +67,3 @@ def get_user_topics(request):
 @csrf_exempt
 def itsme(request):
     return HttpResponse('long duong')
-
-def index(request):
-    return render(request, "build/index.html")
-

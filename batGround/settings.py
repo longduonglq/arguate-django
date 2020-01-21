@@ -16,7 +16,6 @@ import logging, logging.config
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -26,15 +25,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'arguate.com', '159.89.136.177']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'arguate.com', '165.227.12.224']
 CORS_ORIGIN_ALLOW_ALL = True
-
-# PRODUCTION SETTINGS
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'build', 'static'),
-]
-# END PRODUCTION SETTINGS
 
 # Application definition
 
@@ -164,3 +156,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+# PRODUCTION SETTINGS
+
+# END PRODUCTION SETTINGS

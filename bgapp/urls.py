@@ -5,5 +5,4 @@ urlpatterns = [
     path('topics/', views.get_topics),
     path('user_topics/', views.get_user_topics),
     path('itsme/', views.itsme),
-    path('', views.index)
 ]
