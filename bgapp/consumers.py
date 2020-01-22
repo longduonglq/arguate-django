@@ -86,7 +86,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
 
-        if self.contanct_db is not None \
+        if self.contact_db is not None \
                 and self.contact_db.userID in ChatConsumer.user_id_channel_map:
             async_to_sync(self.channel_layer.send)(
                 ChatConsumer.user_id_channel_map[self.contact_db.userID],
