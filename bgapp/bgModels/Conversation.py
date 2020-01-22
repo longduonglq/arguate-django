@@ -17,7 +17,7 @@ class Message(models.Model):
     timeSent = models.DateTimeField(default=datetime.datetime.now, editable=False)
 
     content = models.TextField()
-    conversation = models.ForeignKey('Conversation', on_delete=models.PROTECT,
+    conversation = models.ForeignKey('Conversation', on_delete=models.CASCADE,
                                      related_name='messages')
 
     sender = models.ForeignKey('User', on_delete=models.PROTECT,

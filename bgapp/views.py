@@ -38,7 +38,6 @@ def get_topics(request):
             [topic.content, topic.pro_camp.user_count, topic.con_camp.user_count]
         )
 
-    #log.debug(json_content['topics'])
     response = JsonResponse(json_content)
     return response
 

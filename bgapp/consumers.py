@@ -75,6 +75,8 @@ class ChatConsumer(JsonWebsocketConsumer):
 
     def disconnect(self, code):
         if self.session_info_db is not None:
+            # in case a brief connection was made. client didn't send user_id
+            # so no session object created
             self.session_info_db.timeEnd = datetime.datetime.now()
             self.session_info_db.save()
 

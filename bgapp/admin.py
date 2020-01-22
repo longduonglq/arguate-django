@@ -1,31 +1,22 @@
 from django.contrib import admin
 from bgapp.bgModels import *
 
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['userID']
+class CustomModelMixin(admin.ModelAdmin):
+    def __init__(self, model, admin_site):
+        self.list_display = [field.name for field in model._meta.fields if field.name != "id"]
+        super(CustomModelMixin, self).__init__(model, admin_site)
 
-class ConversationAdmin(admin.ModelAdmin):
-    list_display = ['conversation_id', 'get_topic_content']
+admin.site.register(User, CustomModelMixin)
+admin.site.register(UserOpinion, CustomModelMixin)
+admin.site.register(SessionInfo, CustomModelMixin)
 
-    def get_topic_content(self, obj):
-        return obj.topic.content
-    get_topic_content.short_description = 'Content'
-    get_topic_content.admin_order_field = 'topic__content'
+admin.site.register(Conversation, CustomModelMixin)
+admin.site.register(Message, CustomModelMixin)
 
-class TopicAdmin(admin.ModelAdmin):
-    list_display = ['content']
+admin.site.register(Feedback, CustomModelMixin)
 
-admin.site.register(User, UserAdmin)
-admin.site.register(UserOpinion)
-admin.site.register(SessionInfo)
-
-admin.site.register(Conversation, ConversationAdmin)
-admin.site.register(Message)
-
-admin.site.register(Feedback)
-
-admin.site.register(Topic, TopicAdmin)
-admin.site.register(ProCamp)
-admin.site.register(ConCamp)
+admin.site.register(Topic, CustomModelMixin)
+admin.site.register(ProCamp, CustomModelMixin)
+admin.site.register(ConCamp, CustomModelMixin)
 
 
