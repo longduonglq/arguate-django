@@ -74,8 +74,9 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.accept()
 
     def disconnect(self, code):
-        self.session_info_db.timeEnd = datetime.datetime.now()
-        self.session_info_db.save()
+        if self.session_info_db is not None:
+            self.session_info_db.timeEnd = datetime.datetime.now()
+            self.session_info_db.save()
 
         self.user_db_ref.isOnline = False
         self.user_db_ref.isLooking = False
