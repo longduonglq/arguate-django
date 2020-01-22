@@ -86,7 +86,8 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
 
-        if self.contact_db.userID in ChatConsumer.user_id_channel_map:
+        if self.contanct_db is not None \
+                and self.contact_db.userID in ChatConsumer.user_id_channel_map:
             async_to_sync(self.channel_layer.send)(
                 ChatConsumer.user_id_channel_map[self.contact_db.userID],
                 {
@@ -225,14 +226,14 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
 
-        if self.contact_db.userID in ChatConsumer.user_id_channel_map:
-            async_to_sync(self.channel_layer.send)(
-                ChatConsumer.user_id_channel_map[self.contact_db.userID],
-                {
-                    'type': 'receive_end_chat',
-                    'cmd': 'receive_end_chat',
-                }
-            )
+            if self.contact_db.userID in ChatConsumer.user_id_channel_map:
+                async_to_sync(self.channel_layer.send)(
+                    ChatConsumer.user_id_channel_map[self.contact_db.userID],
+                    {
+                        'type': 'receive_end_chat',
+                        'cmd': 'receive_end_chat',
+                    }
+                )
 
         self.contact_db = None
         self.cur_conversation_db = None
