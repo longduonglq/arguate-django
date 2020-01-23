@@ -38,6 +38,11 @@ def get_topics(request):
             [topic.content, topic.pro_camp.user_count, topic.con_camp.user_count]
         )
 
+    if not req['input'].isspace():
+        json_content['topics'].sort(
+            key=lambda x: memoized_str_dist(x[0], req['input'].strip()),
+            reverse=True
+        )
     response = JsonResponse(json_content)
     return response
 
