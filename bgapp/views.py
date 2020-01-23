@@ -22,12 +22,7 @@ def get_topics(request):
     if not req['input']:
         topic_suggestions = get_popular_topics()
     else:
-        kws = req['input'].strip().split(' ')
-        q_obj = models.Q(content__icontains=kws[0])
-        for kw in kws[1:]:
-            q_obj = q_obj | models.Q(content__icontains=kw)
-
-        topic_suggestions = Topic.objects.filter(q_obj)[:options_per_page]
+        topic_suggestions = get_topic_suggestions(req['input'].strip())[:options_per_page]
 
     json_content = {
         'topics': [], # [ ['topic', pro, con], ... ]
@@ -38,11 +33,6 @@ def get_topics(request):
             [topic.content, topic.pro_camp.user_count, topic.con_camp.user_count]
         )
 
-    if not req['input'].isspace():
-        json_content['topics'].sort(
-            key=lambda x: memoized_str_dist(x[0], req['input'].strip()),
-            reverse=True
-        )
     response = JsonResponse(json_content)
     return response
 
