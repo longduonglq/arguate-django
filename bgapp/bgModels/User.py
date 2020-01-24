@@ -44,9 +44,6 @@ class SessionInfo(models.Model):
     user = models.ForeignKey('User', on_delete=models.PROTECT,
                              related_name='login_sessions')
 
-    class Meta:
-        ordering = ['-timeStart']
-
 
 class Ban(models.Model):
     startTime = models.DateTimeField()
@@ -58,6 +55,3 @@ class Ban(models.Model):
 
     user = models.ForeignKey('User', on_delete=models.PROTECT,
                              related_name='bans')
-
-    class Meta:
-        ordering = ['-endTime']

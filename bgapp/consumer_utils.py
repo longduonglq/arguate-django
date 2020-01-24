@@ -11,14 +11,14 @@ def get_opponent(opinion_list):
     random_range = list(range(opinion_list.count()))
     shuffle(random_range)
     for index in random_range:
-        if opinion_list[index].position:
-            opponents = opinion_list[index].topic.con_camp.users.filter(
-                                                            isBanned=False,
-                                                            isLooking=True)
-        else:
-            opponents = opinion_list[index].topic.pro_camp.users.filter(
-                                                            isBanned=False,
-                                                            isLooking=True)
+        opponents = opinion_list[index] \
+                    .topic \
+                    .camp(not opinion_list[index].position) \
+                    .users \
+                    .filter(
+                        isBanned=False,
+                        isLooking=True
+                    )
 
         opponents_count = opponents.count()
         if opponents_count > 0:

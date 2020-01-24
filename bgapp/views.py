@@ -30,7 +30,9 @@ def get_topics(request):
 
     for topic in topic_suggestions:
         json_content['topics'].append(
-            [topic.content, topic.pro_camp.user_count, topic.con_camp.user_count]
+            [topic.content,
+             topic.pro_camp.users.exclude(userID=user_db.userID).count(),
+             topic.con_camp.users.exclude(userID=user_db.userID).count()]
         )
 
     response = JsonResponse(json_content)
@@ -60,4 +62,4 @@ def get_user_topics(request):
 
 @csrf_exempt
 def itsme(request):
-    return HttpResponse('long duong')
+    return HttpResponse('Hi, long duong')

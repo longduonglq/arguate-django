@@ -4,7 +4,7 @@ import uuid
 import datetime
 
 class Conversation(models.Model):
-    timeStart = models.DateTimeField(default=datetime.datetime.now, editable=False)
+    timeStart = models.DateTimeField(default=datetime.datetime.now)
     timeEnd = models.DateTimeField()
     isEnded = models.BooleanField(default=False, editable=True)
 

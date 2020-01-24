@@ -5,6 +5,5 @@ from django.db import models
 from bgapp.bgModels.User import Topic
 
 @app.task
-def annotate_topic_num_convo():
-    Topic.objects.annotate(num_convos=models.Count('conversations'))
-
+def mark_users_offline_after():
+    pass

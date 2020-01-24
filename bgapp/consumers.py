@@ -62,10 +62,17 @@ class ChatConsumer(JsonWebsocketConsumer):
             timeEnd=datetime.datetime.now(),
             user=self.user_db_ref
         )
+
+        # register user into all camp before connect
+        for opinion in self.user_db_ref.opinions.filter(isDeleted=False):
+            opinion.topic.camp(opinion.position).users.add(self.user_db_ref)
+            opinion.topic.users.add(self.user_db_ref)
+
+        ChatConsumer.user_id_channel_map[self.user_db_ref.userID] = self.channel_name
+
         self.send_json(content={
             'cmd': 'user_id_confirmed'
         })
-        ChatConsumer.user_id_channel_map[self.user_db_ref.userID] = self.channel_name
 
         user_id_timer.stop()
         statsd.incr('numUsersOnline', 1)
@@ -74,6 +81,11 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.accept()
 
     def disconnect(self, code):
+        # unregister user from all camp and topic before disconnect
+        for opinion in self.user_db_ref.opinions.filter(isDeleted=False):
+            opinion.topic.camp(opinion.position).users.remove(self.user_db_ref)
+            opinion.topic.users.remove(self.user_db_ref)
+
         if self.session_info_db is not None:
             # in case a brief connection was made. client didn't send user_id
             # so no session object created
@@ -198,7 +210,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                     'topic': opinion.topic.content,
                     'opinion': not opinion.position # this is the other opinion
                 })
-                log.debug('match: {} *** {}'.format(self.user_id, str(self.contact_db.userID)))
 
             except Exception as e:
                 self.user_db_ref.isLooking = False
@@ -336,8 +347,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                 userStarted=self.user_db_ref,
                 content=data['topic'],
             )
-            ProCamp.objects.create(topic=topic_db)
-            ConCamp.objects.create(topic=topic_db)
 
         except Exception as e:
             self.inform_client_of_error(
@@ -356,16 +365,12 @@ class ChatConsumer(JsonWebsocketConsumer):
             user=self.user_db_ref
         )
 
-        if data['position']:
-            topic_db.pro_camp.users.add(self.user_db_ref)
-        else:
-            topic_db.con_camp.users.add(self.user_db_ref)
+        topic_db.camp(data['position']).users.add(self.user_db_ref)
+        topic_db.camp(data['position']).save()
 
         # what topics is an online user currently engage in
         self.user_db_ref.topics.add(topic_db)
 
-        topic_db.con_camp.save()
-        topic_db.pro_camp.save()
         topic_db.save()
 
     def change_opinion(self, data):
@@ -387,41 +392,23 @@ class ChatConsumer(JsonWebsocketConsumer):
             )
             return None
 
+        # change camp
+        try:
+            topic_db = Topic.objects.get(content__iexact=data['topic'])
+            topic_db.camp(user_opinion.position).users.remove(self.user_db_ref)
+            topic_db.camp(user_opinion.position).save()
+
+            topic_db.camp(not user_opinion.position).users.add(self.user_db_ref)
+            topic_db.camp(not user_opinion.position).save()
+        except Exception as e:
+            self.inform_client_of_error(
+                log_msg=str(e),
+                type='change_opinion_err'
+            )
+            return None
+
         user_opinion.position = not user_opinion.position
         user_opinion.save()
-
-        # change camp
-        if user_opinion.position:
-            try:
-                topic_db = Topic.objects.get(content__iexact=data['topic'])
-                con_users = topic_db.con_camp.users
-                con_users.remove(self.user_db_ref)
-
-                pro_users = topic_db.pro_camp.users
-                pro_users.add(self.user_db_ref)
-            except Exception as e:
-                self.inform_client_of_error(
-                    log_msg=str(e),
-                    type='change_opinion_err',
-                )
-                return None
-        else:
-            try:
-                topic_db = Topic.objects.get(content__iexact=data['topic'])
-                con_users = topic_db.pro_camp.users
-                con_users.remove(self.user_db_ref)
-
-                pro_users = topic_db.con_camp.users
-                pro_users.add(self.user_db_ref)
-            except Exception as e:
-                self.inform_client_of_error(
-                    log_msg=str(e),
-                    type='change_opinion_err',
-                )
-                return None
-
-        topic_db.con_camp.save()
-        topic_db.pro_camp.save()
 
     def unregister_opinion(self, data):
         """
@@ -447,34 +434,18 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         # unregister user from Camp
         topic_db = None
-        if user_opinion.position:
-            try:
-                topic_db = Topic.objects.get(content__iexact=data['topic'])
-                users = topic_db.pro_camp.users
-                users.remove(self.user_db_ref)
-
-            except Exception as e:
-                self.inform_client_of_error(
-                    log_msg=str(e),
-                    type='unregister_opinion_err: {}'.format(e),
-                )
-        else:
-            try:
-                topic_db = Topic.objects.get(content__iexact=data['topic'])
-                users = topic_db.con_camp.users
-                users.remove(self.user_db_ref)
-
-            except Exception as e:
-                self.inform_client_of_error(
-                    log_msg=str(e),
-                    type='unregister_opinion_err: {}'.format(e),
-                )
+        try:
+            topic_db = Topic.objects.get(content__iexact=data['topic'])
+            topic_db.camp(user_opinion).users.remove(self.user_db_ref)
+            topic_db.camp(user_opinion).save()
+        except Exception as e:
+            self.inform_client_of_error(
+                log_msg=str(e),
+                type='unregister_opinion_err: {}'.format(e)
+            )
 
         if topic_db is not None:
             self.user_db_ref.topics.remove(topic_db)
-
-        topic_db.con_camp.save()
-        topic_db.pro_camp.save()
 
     cmd_handlers = {
         'user_id': user_id,
