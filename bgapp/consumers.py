@@ -321,7 +321,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             data keys: cmd, topic, position
         """
         try:
-            topic_db = Topic.objects.get(content__iexact=data['topic'])
+            topic_db = Topic.objects.get(content__iexact=data['topic'].strip())
         except exceptions.ObjectDoesNotExist:
             # new topic, trying to create in db
             passed, reason = topic_security_check(data['topic'])
@@ -358,15 +358,15 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         if data['position']:
             topic_db.pro_camp.users.add(self.user_db_ref)
-            topic_db.pro_camp.user_count += 1
         else:
             topic_db.con_camp.users.add(self.user_db_ref)
-            topic_db.con_camp.user_count += 1
+
         # what topics is an online user currently engage in
         self.user_db_ref.topics.add(topic_db)
 
         topic_db.con_camp.save()
         topic_db.pro_camp.save()
+        topic_db.save()
 
     def change_opinion(self, data):
         """
@@ -396,11 +396,9 @@ class ChatConsumer(JsonWebsocketConsumer):
                 topic_db = Topic.objects.get(content__iexact=data['topic'])
                 con_users = topic_db.con_camp.users
                 con_users.remove(self.user_db_ref)
-                topic_db.con_camp.user_count -= 1
 
                 pro_users = topic_db.pro_camp.users
                 pro_users.add(self.user_db_ref)
-                topic_db.pro_camp.user_count += 1
             except Exception as e:
                 self.inform_client_of_error(
                     log_msg=str(e),
@@ -412,11 +410,9 @@ class ChatConsumer(JsonWebsocketConsumer):
                 topic_db = Topic.objects.get(content__iexact=data['topic'])
                 con_users = topic_db.pro_camp.users
                 con_users.remove(self.user_db_ref)
-                topic_db.pro_camp.user_count -= 1
 
                 pro_users = topic_db.con_camp.users
                 pro_users.add(self.user_db_ref)
-                topic_db.con_camp.user_count += 1
             except Exception as e:
                 self.inform_client_of_error(
                     log_msg=str(e),
@@ -456,7 +452,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                 topic_db = Topic.objects.get(content__iexact=data['topic'])
                 users = topic_db.pro_camp.users
                 users.remove(self.user_db_ref)
-                topic_db.pro_camp.user_count -= 1
 
             except Exception as e:
                 self.inform_client_of_error(
@@ -468,7 +463,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                 topic_db = Topic.objects.get(content__iexact=data['topic'])
                 users = topic_db.con_camp.users
                 users.remove(self.user_db_ref)
-                topic_db.con_camp.user_count -= 1
 
             except Exception as e:
                 self.inform_client_of_error(

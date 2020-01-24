@@ -1,5 +1,6 @@
 from django.db import models
 from .WordBag import WordBag
+from ..cache import memoized_times
 import uuid
 import datetime
 
@@ -13,12 +14,19 @@ class Topic(models.Model):
     wordbag = models.ForeignKey(WordBag, on_delete=models.PROTECT, related_name='words', null=True)
 
 class ProCamp(models.Model):
-    user_count = models.IntegerField(default=0)
     topic = models.OneToOneField(Topic, on_delete=models.PROTECT, related_name='pro_camp')
     users = models.ManyToManyField('User', related_name='pro_camps')
 
+    @property
+    @memoized_times(1)
+    def user_count(self):
+        return self.users.count()
 
 class ConCamp(models.Model):
-    user_count = models.IntegerField(default=0)
     topic = models.OneToOneField(Topic, on_delete=models.PROTECT, related_name='con_camp')
     users = models.ManyToManyField('User', related_name='con_camps')
+
+    @property
+    @memoized_times(1)
+    def user_count(self):
+        return self.users.count()
