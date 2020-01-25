@@ -9,7 +9,7 @@ class Topic(models.Model):
     dateStart = models.DateTimeField(editable=False, default=datetime.datetime.now)
     userStarted = models.ForeignKey('User', on_delete=models.PROTECT, related_name='topics_started')
 
-    content = models.TextField()
+    content = models.TextField(editable=True)
     topic_id = models.UUIDField(editable=False, default=uuid.uuid4)
 
     wordbag = models.ForeignKey(WordBag, on_delete=models.PROTECT, related_name='words', null=True)

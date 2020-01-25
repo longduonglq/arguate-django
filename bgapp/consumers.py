@@ -3,7 +3,6 @@ from channels.exceptions import StopConsumer
 from asgiref.sync import async_to_sync
 from django.core import exceptions
 from django.db import models
-from statsd.defaults.django import statsd
 
 import datetime
 import uuid
@@ -21,7 +20,7 @@ class ChatConsumer(JsonWebsocketConsumer):
     user_id_channel_map = {}
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(ChatConsumer, self).__init__(*args, **kwargs)
         self.user_db_ref = None
         self.user_id = None
         self.contact_db = None
@@ -40,9 +39,6 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.send_json(content=json_content)
 
     def user_id(self, data):
-        user_id_timer = statsd.timer('verifyID_Time')
-        user_id_timer.start()
-
         self.user_id = data['id']
         try:
             self.user_db_ref = User.objects.get(
@@ -73,9 +69,6 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.send_json(content={
             'cmd': 'user_id_confirmed'
         })
-
-        user_id_timer.stop()
-        statsd.incr('numUsersOnline', 1)
 
     def connect(self):
         self.accept()
@@ -115,17 +108,12 @@ class ChatConsumer(JsonWebsocketConsumer):
         # calculate the average session duration
         avg = IncrementalAverage.add_to_average('avg_session_duration',
         getMinutes(self.session_info_db.timeEnd - self.session_info_db.timeStart))
-        statsd.gauge('avg_session_duration', avg)
-        statsd.decr('numUsersOnline', 1)
 
     def receive_json(self, data, **kwargs):
         log.debug('-*-*-receive json: {}'.format(data))
         cmd = data['cmd']
         if cmd in self.cmd_handlers:
-            cmdTime = statsd.timer(cmd + '_Time')
-            cmdTime.start()
             self.cmd_handlers[cmd](self, data)
-            cmdTime.stop()
 
     def receive_start_chat(self, data):
         self.contact_db = User.objects.get(userID__exact=data['contact_id'])
