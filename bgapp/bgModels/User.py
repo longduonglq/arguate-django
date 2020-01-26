@@ -22,7 +22,7 @@ class UserOpinion(models.Model):
 
     position = models.BooleanField()
     topic = models.ForeignKey(Topic, on_delete=models.PROTECT, related_name='opinions')
-    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='opinions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='opinions')
 
 
 class UserComplaint(models.Model):
@@ -42,7 +42,7 @@ class SessionInfo(models.Model):
     timeStart = models.DateTimeField(editable=False, default=datetime.datetime.now)
     timeEnd = models.DateTimeField()
 
-    user = models.ForeignKey('User', on_delete=models.PROTECT,
+    user = models.ForeignKey('User', on_delete=models.CASCADE,
                              related_name='login_sessions')
 
     class Meta:
@@ -57,5 +57,5 @@ class Ban(models.Model):
     banCode = models.CharField(max_length=5, default='')
     reason = models.TextField()
 
-    user = models.ForeignKey('User', on_delete=models.PROTECT,
+    user = models.ForeignKey('User', on_delete=models.CASCADE,
                              related_name='bans')

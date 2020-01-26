@@ -32,7 +32,7 @@ class Topic(models.Model):
             return self.con_camp
 
 class ProCamp(models.Model):
-    topic = models.OneToOneField(Topic, on_delete=models.PROTECT, related_name='pro_camp')
+    topic = models.OneToOneField(Topic, on_delete=models.CASCADE, related_name='pro_camp')
     users = models.ManyToManyField('User', related_name='pro_camps')
 
     @property
@@ -42,7 +42,7 @@ class ProCamp(models.Model):
 
 
 class ConCamp(models.Model):
-    topic = models.OneToOneField(Topic, on_delete=models.PROTECT, related_name='con_camp')
+    topic = models.OneToOneField(Topic, on_delete=models.CASCADE, related_name='con_camp')
     users = models.ManyToManyField('User', related_name='con_camps')
 
     @property

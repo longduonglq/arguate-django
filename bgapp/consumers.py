@@ -84,6 +84,8 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.accept()
 
     def disconnect(self, code):
+        online_user_Num.dec()
+
         # unregister user from all camp and topic before disconnect
         for opinion in self.user_db_ref.opinions.filter(isDeleted=False):
             opinion.topic.camp(opinion.position).users.remove(self.user_db_ref)
@@ -94,6 +96,13 @@ class ChatConsumer(JsonWebsocketConsumer):
             # so no session object created
             self.session_info_db.timeEnd = datetime.now()
             self.session_info_db.save()
+
+            # stats
+            session_length = getMinutes(self.session_info_db.timeEnd - self.session_info_db.timeStart)
+            if session_length > 0:
+                session_duration.observe(
+                    session_length
+                )
 
         self.user_db_ref.isOnline = False
         self.user_db_ref.isLooking = False
@@ -114,13 +123,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                 }
             )
         del ChatConsumer.user_id_channel_map[self.user_db_ref.userID]
-
-        online_user_Num.dec()
-        session_length = getMinutes(self.session_info_db.timeEnd - self.session_info_db.timeStart)
-        if session_length > 0:
-            session_duration.observe(
-                session_length
-            )
 
     def receive_json(self, data, **kwargs):
         log.debug('-*-*-receive json: {}'.format(data))
@@ -245,6 +247,8 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
 
+            # stat collection
+            active_convo_Num.dec()
             dur = getMinutes(self.cur_conversation_db.timeEnd - self.cur_conversation_db.timeStart)
             if dur > 0:
                 conversation_duration.observe(dur)
@@ -257,8 +261,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                         'cmd': 'receive_end_chat',
                     }
                 )
-
-            active_convo_Num.dec()
 
         self.contact_db = None
         self.cur_conversation_db = None
