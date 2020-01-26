@@ -5,11 +5,13 @@ from bgapp.bgModels import *
 from django.core import exceptions
 from .view_utils import *
 from django.shortcuts import render
+from .stats import get_topics_Latency, get_user_topics_Latency
 
 import logging
 log = logging.getLogger('batground')
 
 @csrf_exempt
+@get_topics_Latency.time()
 def get_topics(request):
     req = json.loads(request.body.decode('utf-8'))
     try:
@@ -38,6 +40,7 @@ def get_topics(request):
 
 
 @csrf_exempt
+@get_user_topics_Latency.time()
 def get_user_topics(request):
     req = json.loads(request.body.decode('utf-8'))
     try:

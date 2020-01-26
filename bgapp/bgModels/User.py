@@ -7,6 +7,7 @@ import datetime
 class User(models.Model):
     isOnline = models.BooleanField(default=True, editable=True)
     isBanned = models.BooleanField(default=False, editable=True)
+    isActive = models.BooleanField(default=True, editable=True)
 
     isLooking = models.BooleanField(default=False, editable=True)
     topics = models.ManyToManyField(Topic, related_name='users')
@@ -43,6 +44,9 @@ class SessionInfo(models.Model):
 
     user = models.ForeignKey('User', on_delete=models.PROTECT,
                              related_name='login_sessions')
+
+    class Meta:
+        ordering = ['-timeEnd']
 
 
 class Ban(models.Model):

@@ -19,5 +19,6 @@ from django.urls import path, include
 urlpatterns = [
     path('ldadmin/', admin.site.urls),
     path('lduong/', include('ld_admin.urls')),
-    path('', include('bgapp.urls'))
+    path('', include('bgapp.urls')),
+    path('', include('django_prometheus.urls'))
 ]

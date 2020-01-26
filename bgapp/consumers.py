@@ -4,7 +4,7 @@ from asgiref.sync import async_to_sync
 from django.core import exceptions
 from django.db import models
 
-import datetime
+from datetime import datetime, timedelta
 import uuid
 import logging
 
@@ -12,6 +12,12 @@ from bgapp.bgModels import *
 from .consumer_utils import *
 from .error_msgs import *
 from .tasks import *
+from .stats import online_user_Num, new_users_Num, \
+                    active_convo_Num, new_convo_Num, \
+                    topics_created, active_topics_num, \
+                    opinions_registered, active_opinion_num, \
+                    start_chat_Wait, conversation_duration, session_duration, \
+                    found_fail
 
 log = logging.getLogger('batground')
 log.setLevel(logging.DEBUG)
@@ -46,16 +52,18 @@ class ChatConsumer(JsonWebsocketConsumer):
             )
         except exceptions.ObjectDoesNotExist:
             self.user_db_ref = User.objects.create(userID=self.user_id)
+            new_users_Num.inc()
 
         if self.user_db_ref.isBanned:
             self.disconnect()
 
         self.user_db_ref.isOnline = True
+        self.user_db_ref.isActive = True
         self.user_db_ref.save()
 
         self.session_info_db = SessionInfo.objects.create(
             ip=self.scope['client'][0],
-            timeEnd=datetime.datetime.now(),
+            timeEnd=datetime.now(),
             user=self.user_db_ref
         )
 
@@ -65,6 +73,8 @@ class ChatConsumer(JsonWebsocketConsumer):
             opinion.topic.users.add(self.user_db_ref)
 
         ChatConsumer.user_id_channel_map[self.user_db_ref.userID] = self.channel_name
+        # stats logging
+        online_user_Num.inc()
 
         self.send_json(content={
             'cmd': 'user_id_confirmed'
@@ -82,7 +92,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         if self.session_info_db is not None:
             # in case a brief connection was made. client didn't send user_id
             # so no session object created
-            self.session_info_db.timeEnd = datetime.datetime.now()
+            self.session_info_db.timeEnd = datetime.now()
             self.session_info_db.save()
 
         self.user_db_ref.isOnline = False
@@ -90,7 +100,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.user_db_ref.save()
 
         if self.cur_conversation_db is not None:
-            self.cur_conversation_db.timeEnd = datetime.datetime.now()
+            self.cur_conversation_db.timeEnd = datetime.now()
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
 
@@ -105,9 +115,12 @@ class ChatConsumer(JsonWebsocketConsumer):
             )
         del ChatConsumer.user_id_channel_map[self.user_db_ref.userID]
 
-        # calculate the average session duration
-        avg = IncrementalAverage.add_to_average('avg_session_duration',
-        getMinutes(self.session_info_db.timeEnd - self.session_info_db.timeStart))
+        online_user_Num.dec()
+        session_length = getMinutes(self.session_info_db.timeEnd - self.session_info_db.timeStart)
+        if session_length > 0:
+            session_duration.observe(
+                session_length
+            )
 
     def receive_json(self, data, **kwargs):
         log.debug('-*-*-receive json: {}'.format(data))
@@ -166,10 +179,11 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.inform_client_of_error(
                 type='start_chat_err.no_opponents'
             )
+            found_fail.labels(status='fail').inc()
         else:
             try:
                 self.cur_conversation_db = Conversation.objects.create(
-                    timeEnd=datetime.datetime.now(),
+                    timeEnd=datetime.now(),
                     topic=opinion.topic
                 )
                 self.cur_conversation_db.users.add(self.user_db_ref, opponent)
@@ -199,6 +213,9 @@ class ChatConsumer(JsonWebsocketConsumer):
                     'opinion': not opinion.position # this is the other opinion
                 })
 
+                active_convo_Num.inc()
+                new_convo_Num.inc()
+                found_fail.labels(status='found').inc()
             except Exception as e:
                 self.user_db_ref.isLooking = False
                 self.user_db_ref.save()
@@ -224,9 +241,13 @@ class ChatConsumer(JsonWebsocketConsumer):
             data keys: cmd
         """
         if self.cur_conversation_db is not None:
-            self.cur_conversation_db.timeEnd = datetime.datetime.now()
+            self.cur_conversation_db.timeEnd = datetime.now()
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
+
+            dur = getMinutes(self.cur_conversation_db.timeEnd - self.cur_conversation_db.timeStart)
+            if dur > 0:
+                conversation_duration.observe(dur)
 
             if self.contact_db.userID in ChatConsumer.user_id_channel_map:
                 async_to_sync(self.channel_layer.send)(
@@ -236,6 +257,8 @@ class ChatConsumer(JsonWebsocketConsumer):
                         'cmd': 'receive_end_chat',
                     }
                 )
+
+            active_convo_Num.dec()
 
         self.contact_db = None
         self.cur_conversation_db = None
@@ -336,6 +359,9 @@ class ChatConsumer(JsonWebsocketConsumer):
                 content=data['topic'],
             )
 
+            topics_created.inc()
+            active_topics_num.inc()
+
         except Exception as e:
             self.inform_client_of_error(
                 log_msg=str(e),
@@ -347,7 +373,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             return None
 
         UserOpinion.objects.create(
-            timeEnd=datetime.datetime.now(),
+            timeEnd=datetime.now(),
             position=data['position'],
             topic=topic_db,
             user=self.user_db_ref
@@ -356,6 +382,8 @@ class ChatConsumer(JsonWebsocketConsumer):
         topic_db.camp(data['position']).users.add(self.user_db_ref)
         topic_db.camp(data['position']).save()
 
+        opinions_registered.inc()
+        active_opinion_num.inc()
         # what topics is an online user currently engage in
         self.user_db_ref.topics.add(topic_db)
 
@@ -417,9 +445,10 @@ class ChatConsumer(JsonWebsocketConsumer):
             )
             return None
         user_opinion.isDeleted = True
-        user_opinion.timeEnd = datetime.datetime.now()
+        user_opinion.timeEnd = datetime.now()
         user_opinion.save()
 
+        active_opinion_num.dec()
         # unregister user from Camp
         topic_db = None
         try:
@@ -435,6 +464,9 @@ class ChatConsumer(JsonWebsocketConsumer):
         if topic_db is not None:
             self.user_db_ref.topics.remove(topic_db)
 
+    def start_chat_wait_time(self, data):
+        start_chat_Wait.observe(data['time'])
+
     cmd_handlers = {
         'user_id': user_id,
         'send_feedback': send_feedback,
@@ -448,5 +480,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         'register_opinion': register_opinion,
         'change_opinion': change_opinion,
         'unregister_opinion': unregister_opinion,
+
+        'start_chat_wait_time': start_chat_wait_time
     }
 

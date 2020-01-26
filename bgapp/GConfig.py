@@ -10,3 +10,12 @@ class GConfig:
 
         # popular topic in the last ? days
         popularTopicLast_Days = 30
+        recountTopicAfterModerated = 10 # minutes
+
+    class User:
+        markUserInactiveAfter = 15 # days
+        markUserInactiveTimeCycle = 5 # minutes
+
+        markUserOfflineAfter = 15
+        markUserOfflineTimeCycle = 10 # minutes
+
