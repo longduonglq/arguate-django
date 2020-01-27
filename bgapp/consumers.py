@@ -56,7 +56,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             new_users_Num.inc()
 
         if self.user_db_ref.isBanned:
-            self.disconnect()
+            self.disconnect(0)
 
         self.user_db_ref.isOnline = True
         self.user_db_ref.isActive = True

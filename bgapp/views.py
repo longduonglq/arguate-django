@@ -31,8 +31,12 @@ def get_topics(request):
     for topic in topic_suggestions:
         json_content['topics'].append(
             [topic.content,
-             topic.pro_camp.users.exclude(userID=user_db.userID).count(),
-             topic.con_camp.users.exclude(userID=user_db.userID).count()]
+             topic.pro_camp.users
+                 .exclude(userID=user_db.userID)
+                 .exclude(isOnline=False).count(),
+             topic.con_camp.users
+                 .exclude(userID=user_db.userID)
+                 .exclude(isOnline=False).count()]
         )
 
     response = JsonResponse(json_content)
