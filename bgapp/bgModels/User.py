@@ -2,7 +2,7 @@ from django.db import models
 from .Topic import Topic
 from .Conversation import Conversation
 import uuid
-import datetime
+from django.utils import timezone
 
 class User(models.Model):
     isOnline = models.BooleanField(default=True, editable=True)
@@ -16,7 +16,7 @@ class User(models.Model):
 
 
 class UserOpinion(models.Model):
-    timeStart = models.DateTimeField(editable=False, default=datetime.datetime.now)
+    timeStart = models.DateTimeField(editable=False, default=timezone.now)
     timeEnd = models.DateTimeField()
     isDeleted = models.BooleanField(default=False)
 
@@ -26,7 +26,7 @@ class UserOpinion(models.Model):
 
 
 class UserComplaint(models.Model):
-    timeFiled = models.DateTimeField(default=datetime.datetime.now, editable=False)
+    timeFiled = models.DateTimeField(default=timezone.now, editable=False)
 
     conversation = models.ForeignKey(Conversation, on_delete=models.PROTECT, related_name='complaints')
     filedBy = models.ForeignKey(User, on_delete=models.PROTECT, related_name='complaints_made')
@@ -39,7 +39,7 @@ class UserComplaint(models.Model):
 class SessionInfo(models.Model):
     ip = models.GenericIPAddressField(null=True)
 
-    timeStart = models.DateTimeField(editable=False, default=datetime.datetime.now)
+    timeStart = models.DateTimeField(editable=False, default=timezone.now)
     timeEnd = models.DateTimeField()
 
     user = models.ForeignKey('User', on_delete=models.CASCADE,

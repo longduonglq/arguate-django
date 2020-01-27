@@ -1,6 +1,3 @@
-import re
-from django.db import models
-
 import random
 from random import shuffle
 random.seed(1)

@@ -1,10 +1,10 @@
 from django.db import models
 from .Topic import Topic
 import uuid
-import datetime
+from django.utils import timezone
 
 class Conversation(models.Model):
-    timeStart = models.DateTimeField(default=datetime.datetime.now)
+    timeStart = models.DateTimeField(default=timezone.now)
     timeEnd = models.DateTimeField()
     isEnded = models.BooleanField(default=False, editable=True)
 
@@ -14,7 +14,7 @@ class Conversation(models.Model):
 
 
 class Message(models.Model):
-    timeSent = models.DateTimeField(default=datetime.datetime.now, editable=False)
+    timeSent = models.DateTimeField(default=timezone.now, editable=False)
 
     content = models.TextField()
     conversation = models.ForeignKey('Conversation', on_delete=models.CASCADE,

@@ -3,10 +3,10 @@ from .WordBag import WordBag
 from ..cache import memoized_times
 from ..GConfig import GConfig
 import uuid
-import datetime
+from django.utils import timezone
 
 class Topic(models.Model):
-    dateStart = models.DateTimeField(editable=False, default=datetime.datetime.now)
+    dateStart = models.DateTimeField(editable=False, default=timezone.now)
     userStarted = models.ForeignKey('User', on_delete=models.PROTECT, related_name='topics_started')
 
     content = models.TextField(editable=True)

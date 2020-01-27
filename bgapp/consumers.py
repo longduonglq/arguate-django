@@ -4,7 +4,8 @@ from asgiref.sync import async_to_sync
 from django.core import exceptions
 from django.db import models
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 import uuid
 import logging
 
@@ -63,7 +64,7 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         self.session_info_db = SessionInfo.objects.create(
             ip=self.scope['client'][0],
-            timeEnd=datetime.now(),
+            timeEnd=timezone.now(),
             user=self.user_db_ref
         )
 
@@ -94,7 +95,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         if self.session_info_db is not None:
             # in case a brief connection was made. client didn't send user_id
             # so no session object created
-            self.session_info_db.timeEnd = datetime.now()
+            self.session_info_db.timeEnd = timezone.now()
             self.session_info_db.save()
 
             # stats
@@ -109,7 +110,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.user_db_ref.save()
 
         if self.cur_conversation_db is not None:
-            self.cur_conversation_db.timeEnd = datetime.now()
+            self.cur_conversation_db.timeEnd = timezone.now()
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
 
@@ -185,7 +186,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         else:
             try:
                 self.cur_conversation_db = Conversation.objects.create(
-                    timeEnd=datetime.now(),
+                    timeEnd=timezone.now(),
                     topic=opinion.topic
                 )
                 self.cur_conversation_db.users.add(self.user_db_ref, opponent)
@@ -243,7 +244,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             data keys: cmd
         """
         if self.cur_conversation_db is not None:
-            self.cur_conversation_db.timeEnd = datetime.now()
+            self.cur_conversation_db.timeEnd = timezone.now()
             self.cur_conversation_db.isEnded = True
             self.cur_conversation_db.save()
 
@@ -375,7 +376,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             return None
 
         UserOpinion.objects.create(
-            timeEnd=datetime.now(),
+            timeEnd=timezone.now(),
             position=data['position'],
             topic=topic_db,
             user=self.user_db_ref
@@ -447,7 +448,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             )
             return None
         user_opinion.isDeleted = True
-        user_opinion.timeEnd = datetime.now()
+        user_opinion.timeEnd = timezone.now()
         user_opinion.save()
 
         active_opinion_num.dec()
