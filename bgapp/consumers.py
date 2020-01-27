@@ -54,6 +54,8 @@ class ChatConsumer(JsonWebsocketConsumer):
         except exceptions.ObjectDoesNotExist:
             self.user_db_ref = User.objects.create(userID=self.user_id)
             new_users_Num.inc()
+        except Exception as e:
+            return None
 
         if self.user_db_ref.isBanned:
             self.disconnect(0)
@@ -61,6 +63,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.user_db_ref.isOnline = True
         self.user_db_ref.isActive = True
         self.user_db_ref.save()
+        ChatConsumer.user_id_channel_map[self.user_db_ref.userID] = self.channel_name
 
         self.session_info_db = SessionInfo.objects.create(
             ip=self.scope['client'][0],
@@ -73,7 +76,6 @@ class ChatConsumer(JsonWebsocketConsumer):
             opinion.topic.camp(opinion.position).users.add(self.user_db_ref)
             opinion.topic.users.add(self.user_db_ref)
 
-        ChatConsumer.user_id_channel_map[self.user_db_ref.userID] = self.channel_name
         # stats logging
         online_user_Num.inc()
 
