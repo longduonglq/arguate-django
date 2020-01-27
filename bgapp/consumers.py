@@ -178,7 +178,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.user_db_ref.isLooking = True
         self.user_db_ref.save()
 
-        opponent, opinion = get_opponent(opinion_list)
+        opponent, opinion = get_opponent(opinion_list, ChatConsumer.user_id_channel_map)
 
         if opponent == 'NOT_FOUND':
             self.inform_client_of_error(
