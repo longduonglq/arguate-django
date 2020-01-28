@@ -11,6 +11,7 @@ class User(models.Model):
 
     isLooking = models.BooleanField(default=False, editable=True)
     topics = models.ManyToManyField(Topic, related_name='users')
+    channelID = models.TextField(max_length=100, default=None, null=True)
 
     userID = models.UUIDField(editable=False, default=uuid.uuid4)
 

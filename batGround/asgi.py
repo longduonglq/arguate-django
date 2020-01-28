@@ -14,3 +14,7 @@ from channels.routing import get_default_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'batGround.settings')
 django.setup()
 application = get_default_application()
+
+from bgapp.bgModels.User import User
+for user in User.objects.all():
+    user.channelID = None

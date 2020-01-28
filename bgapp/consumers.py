@@ -19,13 +19,12 @@ from .stats import online_user_Num, new_users_Num, \
                     opinions_registered, active_opinion_num, \
                     start_chat_Wait, conversation_duration, session_duration, \
                     found_fail
+from .ChannelMap import *
 
 log = logging.getLogger('batground')
 log.setLevel(logging.DEBUG)
 
 class ChatConsumer(JsonWebsocketConsumer):
-    user_id_channel_map = {}
-
     def __init__(self, *args, **kwargs):
         super(ChatConsumer, self).__init__(*args, **kwargs)
         self.user_db_ref = None
@@ -62,8 +61,8 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         self.user_db_ref.isOnline = True
         self.user_db_ref.isActive = True
+        self.user_db_ref.channelID = self.channel_name # map channel name with user
         self.user_db_ref.save()
-        ChatConsumer.user_id_channel_map[self.user_db_ref.userID] = self.channel_name
 
         self.session_info_db = SessionInfo.objects.create(
             ip=self.scope['client'][0],
@@ -88,7 +87,8 @@ class ChatConsumer(JsonWebsocketConsumer):
 
     def disconnect(self, code):
         online_user_Num.dec()
-
+        self.user_db_ref.channelID = None
+        self.user_db_ref.save() # unmap user to channel name
         # unregister user from all camp and topic before disconnect
         for opinion in self.user_db_ref.opinions.filter(isDeleted=False):
             opinion.topic.camp(opinion.position).users.remove(self.user_db_ref)
@@ -117,15 +117,14 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.cur_conversation_db.save()
 
         if self.contact_db is not None \
-                and self.contact_db.userID in ChatConsumer.user_id_channel_map:
+                and checkUserIdInMap(self.contact_db):
             async_to_sync(self.channel_layer.send)(
-                ChatConsumer.user_id_channel_map[self.contact_db.userID],
+                getChannelID(self.contact_db),
                 {
                     'type': 'receive_end_chat',
                     'cmd': 'receive_end_chat',
                 }
             )
-        del ChatConsumer.user_id_channel_map[self.user_db_ref.userID]
 
     def receive_json(self, data, **kwargs):
         log.debug('-*-*-receive json: {}'.format(data))
@@ -178,7 +177,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.user_db_ref.isLooking = True
         self.user_db_ref.save()
 
-        opponent, opinion = get_opponent(opinion_list, ChatConsumer.user_id_channel_map)
+        opponent, opinion = get_opponent(opinion_list)
 
         if opponent == 'NOT_FOUND':
             self.inform_client_of_error(
@@ -199,7 +198,7 @@ class ChatConsumer(JsonWebsocketConsumer):
                 self.user_db_ref.save()
 
                 async_to_sync(self.channel_layer.send)(
-                    ChatConsumer.user_id_channel_map[self.contact_db.userID],
+                    getChannelID(self.contact_db),
                     {
                         'type': 'receive_start_chat',
                         'cmd': 'receive_start_chat',
@@ -256,9 +255,9 @@ class ChatConsumer(JsonWebsocketConsumer):
             if dur > 0:
                 conversation_duration.observe(dur)
 
-            if self.contact_db.userID in ChatConsumer.user_id_channel_map:
+            if checkUserIdInMap(self.contact_db):
                 async_to_sync(self.channel_layer.send)(
-                    ChatConsumer.user_id_channel_map[self.contact_db.userID],
+                    getChannelID(self.contact_db),
                     {
                         'type': 'receive_end_chat',
                         'cmd': 'receive_end_chat',
@@ -276,7 +275,7 @@ class ChatConsumer(JsonWebsocketConsumer):
 
     def typing_status(self, data):
         async_to_sync(self.channel_layer.send)(
-            ChatConsumer.user_id_channel_map[self.contact_db.userID],
+            getChannelID(self.contact_db),
             {
                 'type': 'receive_typing_status',
                 'cmd': 'receive_typing_status',
@@ -316,7 +315,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         )
 
         async_to_sync(self.channel_layer.send)(
-            ChatConsumer.user_id_channel_map[self.contact_db.userID],
+            getChannelID(self.contact_db),
             {
                 'type': 'receive_msg_from',
                 'msg': msg

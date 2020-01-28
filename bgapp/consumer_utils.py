@@ -2,7 +2,7 @@ import random
 from random import shuffle
 random.seed(1)
 
-def get_opponent(opinion_list, userID_map):
+def get_opponent(opinion_list):
     opinion_list = opinion_list.filter(isDeleted=False)
 
     random_range = list(range(opinion_list.count()))
@@ -19,10 +19,8 @@ def get_opponent(opinion_list, userID_map):
 
         opponents_count = opponents.count()
         if opponents_count > 0:
-            opponent = opponents[random.randint(0, opponents_count - 1)]
-            if opponent.userID not in userID_map:
-                continue
-            return opponent, opinion_list[index]
+            chosen_opponent = opponents[random.randint(0, opponents_count - 1)]
+            return chosen_opponent, opinion_list[index]
         else:
             continue
 
