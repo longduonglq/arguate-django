@@ -13,7 +13,7 @@ class Topic(models.Model):
     topic_id = models.UUIDField(editable=False, default=uuid.uuid4)
     isHidden = models.BooleanField(editable=True, default=False)
 
-    wordbag = models.ForeignKey(WordBag, on_delete=models.PROTECT, related_name='words', null=True)
+    #wordbag = models.ForeignKey(WordBag, on_delete=models.PROTECT, related_name='words', null=True)
 
     # override save() instead of __init__
     def save(self, *args, **kwargs):
