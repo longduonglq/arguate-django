@@ -17,13 +17,16 @@ def static_vars(**kwargs):
 options_per_page = GConfig.Topic.options_per_page
 @memoized_times(GConfig.Topic.popularTopic_MT)
 def get_popular_topics():
-    return Topic.objects.annotate(
+    return Topic.objects \
+        .filter(isHidden=False) \
+        .annotate(
             num_convo=models.Count(
                 'conversations',
                 conversations__timeStart__gte=datetime.now()
                 + timedelta(days=GConfig.Topic.popularTopicLast_Days)
             )
-    ).order_by('-num_convo')[:options_per_page]
+        ) \
+        .order_by('-num_convo')[:options_per_page]
 
 
 # used to sort search result based on similarity to string entered

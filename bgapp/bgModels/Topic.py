@@ -11,6 +11,7 @@ class Topic(models.Model):
 
     content = models.TextField(editable=True)
     topic_id = models.UUIDField(editable=False, default=uuid.uuid4)
+    isHidden = models.BooleanField(editable=True, default=False)
 
     wordbag = models.ForeignKey(WordBag, on_delete=models.PROTECT, related_name='words', null=True)
 
