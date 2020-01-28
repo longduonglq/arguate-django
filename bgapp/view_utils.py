@@ -43,7 +43,7 @@ def get_topic_suggestions(user_input):
         q_obj = q_obj | models.Q(content__icontains=kw)
 
     topic_suggestions = [
-        e for e in Topic.objects.filter(q_obj)
+        e for e in Topic.objects.filter(q_obj, isHidden=False)
     ]
     topic_suggestions.sort(
         key=lambda x: memoized_str_dist(x.content, user_input.strip()),
