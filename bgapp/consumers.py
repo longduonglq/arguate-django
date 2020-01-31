@@ -2,12 +2,13 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from channels.exceptions import StopConsumer
 from asgiref.sync import async_to_sync
 from django.core import exceptions
-from django.db import models
+from django.db import models, utils
 
 from datetime import timedelta
 from django.utils import timezone
 import uuid
 import logging
+import json
 
 from bgapp.bgModels import *
 from .consumer_utils import *
@@ -130,6 +131,15 @@ class ChatConsumer(JsonWebsocketConsumer):
         log.debug('-*-*-receive json: {}'.format(data))
         cmd = data['cmd']
         if cmd in self.cmd_handlers:
+            # try append cmd to activity history
+            if self.user_db_ref is not None:
+                try:
+                    self.user_db_ref.activity += json.dumps(data) + '\n'
+                    self.user_db_ref.save()
+                except utils.DataError:
+                    self.user_db_ref.activity = json.dumps(data)
+                    self.user_db_ref.save()
+
             self.cmd_handlers[cmd](self, data)
 
     def receive_start_chat(self, data):

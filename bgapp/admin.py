@@ -8,7 +8,9 @@ class CustomModelMixin(admin.ModelAdmin):
         super(CustomModelMixin, self).__init__(model, admin_site)
 
 class UserMixin(admin.ModelAdmin):
-    list_display = ['isOnline', 'isBanned', 'isLooking', 'channelID', 'user_ID', 'topics_display', 'pk']
+    list_display = ['isOnline', 'isBanned', 'isLooking', 'channelID',
+                    'user_ID', 'topics_display', 'pk']
+    list_display_links = ['user_ID']
     def user_ID(self, obj):
         return str(obj.userID)
     user_ID.short_description = 'UserID'

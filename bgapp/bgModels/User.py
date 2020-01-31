@@ -8,10 +8,12 @@ class User(models.Model):
     isOnline = models.BooleanField(default=True, editable=True)
     isBanned = models.BooleanField(default=False, editable=True)
     isActive = models.BooleanField(default=True, editable=True)
+    isAdmin = models.BooleanField(default=False, editable=True)
 
     isLooking = models.BooleanField(default=False, editable=True)
     topics = models.ManyToManyField(Topic, related_name='users')
-    channelID = models.TextField(max_length=100, default=None, null=True)
+    activity = models.TextField(max_length=800, default='')
+    channelID = models.CharField(max_length=100, default=None, null=True)
 
     userID = models.UUIDField(editable=False, default=uuid.uuid4)
 
