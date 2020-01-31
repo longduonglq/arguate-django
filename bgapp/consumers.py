@@ -80,7 +80,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         online_user_Num.inc()
 
         self.send_json(content={
-            'cmd': 'user_id_confirmed'
+            'cmd': 'user_id_confirmed',
         })
 
     def connect(self):
@@ -133,12 +133,10 @@ class ChatConsumer(JsonWebsocketConsumer):
         if cmd in self.cmd_handlers:
             # try append cmd to activity history
             if self.user_db_ref is not None:
-                try:
-                    self.user_db_ref.activity += json.dumps(data) + '\n'
-                    self.user_db_ref.save()
-                except utils.DataError:
+                self.user_db_ref.activity += json.dumps(data) + '\n'
+                if len(self.user_db_ref.activity) > 800:
                     self.user_db_ref.activity = json.dumps(data)
-                    self.user_db_ref.save()
+                self.user_db_ref.save()
 
             self.cmd_handlers[cmd](self, data)
 
