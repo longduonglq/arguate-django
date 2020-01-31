@@ -62,6 +62,7 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         self.user_db_ref.isOnline = True
         self.user_db_ref.isActive = True
+        self.user_db_ref.isAdmin = data['admin']
         self.user_db_ref.channelID = self.channel_name # map channel name with user
         self.user_db_ref.save()
 
@@ -134,7 +135,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             # try append cmd to activity history
             if self.user_db_ref is not None:
                 self.user_db_ref.activity += json.dumps(data) + '\n'
-                if len(self.user_db_ref.activity) > 800:
+                if len(self.user_db_ref.activity) > 2000:
                     self.user_db_ref.activity = json.dumps(data)
                 self.user_db_ref.save()
 
@@ -398,7 +399,6 @@ class ChatConsumer(JsonWebsocketConsumer):
         active_opinion_num.inc()
         # what topics is an online user currently engage in
         self.user_db_ref.topics.add(topic_db)
-
         topic_db.save()
 
     def change_opinion(self, data):
@@ -422,12 +422,8 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         # change camp
         try:
-            topic_db = Topic.objects.get(content__iexact=data['topic'])
-            topic_db.camp(user_opinion.position).users.remove(self.user_db_ref)
-            topic_db.camp(user_opinion.position).save()
-
-            topic_db.camp(not user_opinion.position).users.add(self.user_db_ref)
-            topic_db.camp(not user_opinion.position).save()
+            user_opinion.topic.camp(user_opinion.position).users.remove(self.user_db_ref)
+            user_opinion.topic.camp(not user_opinion.position).users.add(self.user_db_ref)
         except Exception as e:
             self.inform_client_of_error(
                 log_msg=str(e),
@@ -462,19 +458,15 @@ class ChatConsumer(JsonWebsocketConsumer):
 
         active_opinion_num.dec()
         # unregister user from Camp
-        topic_db = None
         try:
-            topic_db = Topic.objects.get(content__iexact=data['topic'])
-            topic_db.camp(user_opinion).users.remove(self.user_db_ref)
-            topic_db.camp(user_opinion).save()
+            user_opinion.topic.camp(user_opinion.position).users.remove(self.user_db_ref)
+            user_opinion.topic.users.remove(self.user_db_ref)
         except Exception as e:
             self.inform_client_of_error(
                 log_msg=str(e),
                 type='unregister_opinion_err: {}'.format(e)
             )
 
-        if topic_db is not None:
-            self.user_db_ref.topics.remove(topic_db)
 
     def start_chat_wait_time(self, data):
         start_chat_Wait.observe(data['time'])
