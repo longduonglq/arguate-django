@@ -24,7 +24,7 @@ class UserOpinion(models.Model):
     isDeleted = models.BooleanField(default=False)
 
     position = models.BooleanField()
-    topic = models.ForeignKey(Topic, on_delete=models.PROTECT, related_name='opinions')
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='opinions')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='opinions')
 
 
