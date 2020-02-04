@@ -186,8 +186,7 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.user_db_ref.isLooking = True
         self.user_db_ref.save()
 
-        opponent, opinion = get_opponent(opinion_list)
-
+        opponent, my_opinion, other_opinion = get_opponent(opinion_list)
         if opponent == 'NOT_FOUND':
             self.inform_client_of_error(
                 type='start_chat_err.no_opponents'
@@ -197,7 +196,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             try:
                 self.cur_conversation_db = Conversation.objects.create(
                     timeEnd=timezone.now(),
-                    topic=opinion.topic
+                    topic=my_opinion.topic
                 )
                 self.cur_conversation_db.users.add(self.user_db_ref, opponent)
 
@@ -213,8 +212,8 @@ class ChatConsumer(JsonWebsocketConsumer):
                         'cmd': 'receive_start_chat',
                         'contact_id': self.user_id,
                         'conversation_id': str(self.cur_conversation_db.conversation_id),
-                        'topic': opinion.topic.content,
-                        'opinion': opinion.position # this is ur opinion
+                        'topic': my_opinion.topic.content,
+                        'opinion': my_opinion.position # this is ur opinion
                     }
                 )
 
@@ -222,8 +221,8 @@ class ChatConsumer(JsonWebsocketConsumer):
                     'cmd': 'start_chat_success',
                     'contact_id': str(self.contact_db.userID),
                     'conversation_id': str(self.cur_conversation_db.conversation_id),
-                    'topic': opinion.topic.content,
-                    'opinion': not opinion.position # this is the other opinion
+                    'topic': other_opinion.topic.content,
+                    'opinion': other_opinion.position # this is the other opinion
                 })
 
                 active_convo_Num.inc()

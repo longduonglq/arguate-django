@@ -1,5 +1,4 @@
 from django.db import models
-from .WordBag import WordBag
 from ..cache import memoized_times
 from ..GConfig import GConfig
 import uuid
@@ -13,7 +12,8 @@ class Topic(models.Model):
     topic_id = models.UUIDField(editable=False, default=uuid.uuid4)
     isHidden = models.BooleanField(editable=True, default=False)
 
-    #wordbag = models.ForeignKey(WordBag, on_delete=models.PROTECT, related_name='words', null=True)
+    synonyms = models.ManyToManyField('self', blank=True, null=True)
+    antonyms = models.ManyToManyField('self', blank=True, null=True)
 
     # override save() instead of __init__
     def save(self, *args, **kwargs):
@@ -31,6 +31,42 @@ class Topic(models.Model):
             return self.pro_camp
         else:
             return self.con_camp
+
+    def nym(self, bool):
+        if bool:
+            return self.synonyms
+        else:
+            return self.antonyms
+
+    def get_all_nyms(self, bnym):
+        # if nyms is True get all synonyms and vice versa
+        result = set([])
+        visited = {}
+        for topic in Topic.objects.all():
+            visited[topic] = False
+
+        queue = []
+        visited[self] = True
+        queue.append(self)
+
+        topic = queue.pop(0)
+        for nym in topic.nym(bnym).all():
+            visited[nym] = True
+            queue.append(nym)
+            result.add(nym)
+
+        while queue:
+            topic = queue.pop(0)
+            for nym in topic.nym(True).all():
+                if not visited[nym]:
+                    visited[nym] = True
+                    queue.append(nym)
+                    result.add(nym)
+
+        return result
+
+    def __str__(self):
+        return str(self.content)
 
 class ProCamp(models.Model):
     topic = models.OneToOneField(Topic, on_delete=models.CASCADE, related_name='pro_camp')
