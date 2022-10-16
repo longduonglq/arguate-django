@@ -68,10 +68,8 @@ class TestConsumer(JsonWebsocketConsumer):
                 self.num_convo = num
 
         topics = [
-            topic('gay', 10),
-            topic('gun control', 43),
-            topic('long duong', 126),
-            topic('iran bomb', 234)
+            topic('gay marriage', 10),
+            topic('gun control', 43)
         ]
         topics.sort(key=lambda x: x.num_convo)
         self.send_json(content={
